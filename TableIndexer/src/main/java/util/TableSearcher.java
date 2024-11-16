@@ -5,6 +5,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
+import org.jsoup.Jsoup;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
@@ -18,6 +19,15 @@ public class TableSearcher {
     private QueryParser captionParser;
     private QueryParser paragraphsParser;
     private QueryParser footnotesParser;
+
+    // Metodo per effettuare il parsing di un documento HTML e ottenere il testo
+    public static String parseHtmlToPlainText(String html) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+        // Usa Jsoup per effettuare il parsing e rimuovere i tag HTML
+        return Jsoup.parse(html).text();
+    }
 
     public TableSearcher(String indexDirectoryPath) throws Exception {
         // Inizializza il lettore dell'indice e il cercatore
@@ -105,12 +115,14 @@ public class TableSearcher {
                     String table = doc.get("table");
                     String sourceFile = doc.get("source_file");
 
+                    String paresdTable = parseHtmlToPlainText(table);       // effettua il parsing della tabella HTML
+
                     // Mostra solo il testo dei campi
                     System.out.println("Documento ID: " + docId + " | Score: " + score);
                     System.out.println("Caption: " + (caption != null ? caption : "N/A"));
                     System.out.println("Footnotes: " + (footnotes != null ? footnotes : "N/A"));
                     System.out.println("Reference: " + (reference != null ? reference : "N/A"));
-                    System.out.println("Table: " + (table != null ? table : "N/A"));  // Mostra il testo della tabella
+                    System.out.println("Table: " + (paresdTable != null ? paresdTable : "N/A"));  // Mostra il testo della tabella
                     System.out.println("Fonte: " + sourceFile   + "\n");
                 }
 
