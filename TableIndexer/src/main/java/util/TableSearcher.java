@@ -58,58 +58,68 @@ public class TableSearcher {
             // Creazione dell'oggetto TableSearcher
             TableSearcher tableSearcher = new TableSearcher(indexDirectory);
 
-            // Chiedi all'utente su quale campo vuole cercare
-            System.out.println("Scegli il campo su cui fare la ricerca:");
-            System.out.println("1. Caption");
-            System.out.println("2. Paragraphs");
-            System.out.println("3. Footnotes");
+            boolean continueSearching = true;
+            while (continueSearching) {
+                // Chiedi all'utente su quale campo vuole cercare
+                System.out.println("Scegli il campo su cui fare la ricerca:");
+                System.out.println("1. Caption");
+                System.out.println("2. Paragraphs");
+                System.out.println("3. Footnotes");
 
-            int choice = scanner.nextInt();
-            scanner.nextLine();  // Consuma la newline lasciata da nextInt()
+                int choice = scanner.nextInt();
+                scanner.nextLine();  // Consuma la newline lasciata da nextInt()
 
-            // Chiedi la query all'utente
-            System.out.print("Inserisci la query di ricerca: ");
-            String query = scanner.nextLine();
+                // Chiedi la query all'utente
+                System.out.print("Inserisci la query di ricerca: ");
+                String query = scanner.nextLine();
 
-            // Esegui la ricerca in base alla scelta dell'utente
-            TopDocs results = null;
-            switch (choice) {
-                case 1:
-                    results = tableSearcher.searchCaption(query);
-                    break;
-                case 2:
-                    results = tableSearcher.searchParagraphs(query);
-                    break;
-                case 3:
-                    results = tableSearcher.searchFootnotes(query);
-                    break;
-                default:
-                    System.out.println("Scelta non valida.");
-                    return;
-            }
+                // Esegui la ricerca in base alla scelta dell'utente
+                TopDocs results = null;
+                switch (choice) {
+                    case 1:
+                        results = tableSearcher.searchCaption(query);
+                        break;
+                    case 2:
+                        results = tableSearcher.searchParagraphs(query);
+                        break;
+                    case 3:
+                        results = tableSearcher.searchFootnotes(query);
+                        break;
+                    default:
+                        System.out.println("Scelta non valida.");
+                        continue;  // Ritorna al ciclo per una nuova ricerca
+                }
 
-            // Stampa i risultati con il punteggio e il documento di origine
-            System.out.println("Trovati " + results.totalHits + " risultati.");
-            for (ScoreDoc scoreDoc : results.scoreDocs) {
-                int docId = scoreDoc.doc;
+                // Stampa i risultati con il punteggio e il documento di origine
+                System.out.println("Trovati " + results.totalHits + " risultati.");
+                for (ScoreDoc scoreDoc : results.scoreDocs) {
+                    int docId = scoreDoc.doc;
 
-                // Usa storedFields() per ottenere il documento
-                Document doc = tableSearcher.searcher.storedFields().document(docId);
+                    // Usa storedFields() per ottenere il documento
+                    Document doc = tableSearcher.searcher.storedFields().document(docId);
 
-                float score = scoreDoc.score; // Ottieni il punteggio di pertinenza
-                String caption = doc.get("caption");
-                String footnotes = doc.get("footnotes");
-                String reference = doc.get("reference");
-                String table = doc.get("table");
-                String sourceFile = doc.get("source_file");
+                    float score = scoreDoc.score; // Ottieni il punteggio di pertinenza
+                    String caption = doc.get("caption");
+                    String footnotes = doc.get("footnotes");
+                    String reference = doc.get("reference");
+                    String table = doc.get("table");
+                    String sourceFile = doc.get("source_file");
 
-                // Mostra solo il testo dei campi
-                System.out.println("Documento ID: " + docId + " | Score: " + score);
-                System.out.println("Caption: " + (caption != null ? caption : "N/A"));
-                System.out.println("Footnotes: " + (footnotes != null ? footnotes : "N/A"));
-                System.out.println("Reference: " + (reference != null ? reference : "N/A"));
-                System.out.println("Table: " + (table != null ? table : "N/A"));  // Mostra il testo della tabella
-                System.out.println("Fonte: " + sourceFile   + "\n");
+                    // Mostra solo il testo dei campi
+                    System.out.println("Documento ID: " + docId + " | Score: " + score);
+                    System.out.println("Caption: " + (caption != null ? caption : "N/A"));
+                    System.out.println("Footnotes: " + (footnotes != null ? footnotes : "N/A"));
+                    System.out.println("Reference: " + (reference != null ? reference : "N/A"));
+                    System.out.println("Table: " + (table != null ? table : "N/A"));  // Mostra il testo della tabella
+                    System.out.println("Fonte: " + sourceFile   + "\n");
+                }
+
+                // Chiedi all'utente se vuole continuare la ricerca
+                System.out.print("Vuoi fare un'altra ricerca? (s/n): ");
+                String continueChoice = scanner.nextLine().trim().toLowerCase();
+                if (!continueChoice.equals("s")) {
+                    continueSearching = false;  // Esci dal ciclo
+                }
             }
 
         } catch (Exception e) {
