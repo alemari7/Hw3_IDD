@@ -114,10 +114,10 @@ public class JSONIndexer {
                 }
 
                 // Estrarre e indicizzare "reference"
-                if (value instanceof JSONObject && ((JSONObject) value).has("reference")) {
+                if (value instanceof JSONObject && ((JSONObject) value).has("references")) {
                     JSONObject tableInfo = (JSONObject) value;
-                    String reference = tableInfo.optString("reference", "No reference available");
-                    doc.add(new TextField("reference", reference, Field.Store.YES));
+                    String reference = tableInfo.optString("references", "No reference available");
+                    doc.add(new TextField("references", reference, Field.Store.YES));
                 }
 
                 // Aggiungi anche il nome del file per tracciare la provenienza dei dati

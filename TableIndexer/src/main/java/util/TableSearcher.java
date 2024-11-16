@@ -111,7 +111,7 @@ public class TableSearcher {
                     float score = scoreDoc.score; // Ottieni il punteggio di pertinenza
                     String caption = doc.get("caption");
                     String footnotes = doc.get("footnotes");
-                    String reference = doc.get("reference");
+                    String references = doc.get("references");
                     String table = doc.get("table");
                     String sourceFile = doc.get("source_file");
 
@@ -121,7 +121,7 @@ public class TableSearcher {
                     System.out.println("Documento ID: " + docId + " | Score: " + score);
                     System.out.println("Caption: " + (caption != null ? caption : "N/A"));
                     System.out.println("Footnotes: " + (footnotes != null ? footnotes : "N/A"));
-                    System.out.println("Reference: " + (reference != null ? reference : "N/A"));
+                    System.out.println("References: " + (references != null ? references : "N/A"));
                     System.out.println("Table: " + (parsedTable != null ? parsedTable : "N/A"));  // Mostra il testo della tabella
                     System.out.println("Fonte: " + sourceFile   + "\n");
                 }
