@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Created-By: Maven Jar Plugin 3.2.0
+Build-Jdk-Spec: 21
+Class-Path: lucene-core-10.0.0.jar lucene-analysis-common-10.0.0.jar luc
+ ene-queryparser-10.0.0.jar lucene-queries-10.0.0.jar lucene-sandbox-10.
+ 0.0.jar lucene-facet-10.0.0.jar jsoup-1.18.1.jar
+Main-Class: com.example.HTMLSearcher
+
