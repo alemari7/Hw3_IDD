@@ -17,7 +17,7 @@ import java.util.Scanner;
 public class TableSearcher {
     private IndexSearcher searcher;
     private QueryParser captionParser;
-    private QueryParser paragraphsParser;
+    private QueryParser referencesParser;
     private QueryParser footnotesParser;
 
     // Metodo per effettuare il parsing di un documento HTML e ottenere il testo
@@ -36,7 +36,7 @@ public class TableSearcher {
 
         // Crea i parser per i vari campi
         captionParser = new QueryParser("caption", new StandardAnalyzer());
-        paragraphsParser = new QueryParser("paragraphs", new StandardAnalyzer());
+        referencesParser = new QueryParser("references", new StandardAnalyzer());
         footnotesParser = new QueryParser("footnotes", new StandardAnalyzer());
     }
 
@@ -46,9 +46,9 @@ public class TableSearcher {
         return searcher.search(query, 10);
     }
 
-    // Metodo per cercare nel campo 'paragraphs'
-    public TopDocs searchParagraphs(String queryStr) throws Exception {
-        Query query = paragraphsParser.parse(queryStr);
+    // Metodo per cercare nel campo 'references'
+    public TopDocs searchReferences(String queryStr) throws Exception {
+        Query query = referencesParser.parse(queryStr);
         return searcher.search(query, 10);
     }
 
@@ -73,7 +73,7 @@ public class TableSearcher {
                 // Chiedi all'utente su quale campo vuole cercare
                 System.out.println("Scegli il campo su cui fare la ricerca:");
                 System.out.println("1. Caption");
-                System.out.println("2. Paragraphs");
+                System.out.println("2. References");
                 System.out.println("3. Footnotes");
 
                 int choice = scanner.nextInt();
@@ -90,7 +90,7 @@ public class TableSearcher {
                         results = tableSearcher.searchCaption(query);
                         break;
                     case 2:
-                        results = tableSearcher.searchParagraphs(query);
+                        results = tableSearcher.searchReferences(query);
                         break;
                     case 3:
                         results = tableSearcher.searchFootnotes(query);
