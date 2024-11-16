@@ -115,14 +115,14 @@ public class TableSearcher {
                     String table = doc.get("table");
                     String sourceFile = doc.get("source_file");
 
-                    String paresdTable = parseHtmlToPlainText(table);       // effettua il parsing della tabella HTML
+                    String parsedTable = parseHtmlToPlainText(table);       // effettua il parsing della tabella HTML
 
                     // Mostra solo il testo dei campi
                     System.out.println("Documento ID: " + docId + " | Score: " + score);
                     System.out.println("Caption: " + (caption != null ? caption : "N/A"));
                     System.out.println("Footnotes: " + (footnotes != null ? footnotes : "N/A"));
                     System.out.println("Reference: " + (reference != null ? reference : "N/A"));
-                    System.out.println("Table: " + (paresdTable != null ? paresdTable : "N/A"));  // Mostra il testo della tabella
+                    System.out.println("Table: " + (parsedTable != null ? parsedTable : "N/A"));  // Mostra il testo della tabella
                     System.out.println("Fonte: " + sourceFile   + "\n");
                 }
 
