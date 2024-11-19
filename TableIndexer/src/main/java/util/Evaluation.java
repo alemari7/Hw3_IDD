@@ -65,11 +65,10 @@ public class Evaluation {
     }
 
     // Metodo di valutazione
-    public static void evaluateSearchResults(TopDocs topDocs, List<Integer> relevantDocIndices) {
+    public static double[] evaluateSearchResults(TopDocs topDocs, List<Integer> relevantDocIndices) {
         double mrr = calculateMRR(topDocs.scoreDocs, relevantDocIndices);
         double ndcg = calculateNDCG(topDocs, relevantDocIndices);
 
-        System.out.println("MRR: " + mrr);
-        System.out.println("NDCG: " + ndcg);
+        return new double[]{mrr, ndcg};
     }
 }

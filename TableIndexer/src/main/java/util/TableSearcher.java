@@ -70,6 +70,11 @@ public class TableSearcher {
             // Creazione dell'oggetto TableSearcher
             TableSearcher tableSearcher = new TableSearcher(indexDirectory);
 
+            // Variabili per calcolare la media delle metriche
+            double mean_mmr = 0.0;
+            double mean_ndcg = 0.0;
+            int count = 0;
+
             boolean continueSearching = true;
             while (continueSearching) {
                 // Chiedi all'utente su quale campo vuole cercare
@@ -141,7 +146,27 @@ public class TableSearcher {
                 }
 
                 // Valutazione delle metriche
-                Evaluation.evaluateSearchResults(results, relevantDocIndices);
+                double[] evaluationResults = Evaluation.evaluateSearchResults(results, relevantDocIndices);
+                double mrr = evaluationResults[0];
+                double ndcg = evaluationResults[1];
+
+                System.out.println("MRR: " + mrr);
+                System.out.println("NDCG: " + ndcg);
+
+                // Calcola la media delle metriche
+                if (count == 0) {
+                    mean_mmr = mrr;
+                    mean_ndcg = ndcg;
+                }
+                else {
+                    mean_mmr = (mean_mmr * count + mrr) / (count + 1);
+                    mean_ndcg = (mean_ndcg * count + ndcg) / (count + 1);
+                }
+                count++;
+
+                System.out.println("Media MRR: " + mean_mmr);
+                System.out.println("Media NDCG: " + mean_ndcg);
+                System.out.println();
 
                 // Chiedi all'utente se vuole continuare la ricerca
                 System.out.print("Vuoi fare un'altra ricerca? (s/n): ");
