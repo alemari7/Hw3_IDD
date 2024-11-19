@@ -12,6 +12,8 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class TableSearcher {
@@ -123,8 +125,19 @@ public class TableSearcher {
                     System.out.println("Footnotes: " + (footnotes != null ? footnotes : "N/A"));
                     System.out.println("References: " + (references != null ? references : "N/A"));
                     System.out.println("Table: " + (parsedTable != null ? parsedTable : "N/A"));  // Mostra il testo della tabella
-                    System.out.println("Fonte: " + sourceFile   + "\n");
+                    System.out.println("Fonte: " + sourceFile + "\n");
                 }
+
+                // Richiedi gli indici dei documenti rilevanti all'utente
+                System.out.print("Inserisci gli indici dei documenti rilevanti (separati da virgola): ");
+                String[] relevantDocIndicesInput = scanner.nextLine().split(",");
+                List<Integer> relevantDocIndices = new ArrayList<>();
+                for (String idx : relevantDocIndicesInput) {
+                    relevantDocIndices.add(Integer.parseInt(idx.trim()));
+                }
+
+                // Valutazione delle metriche
+                Evaluation.evaluateSearchResults(results, relevantDocIndices);
 
                 // Chiedi all'utente se vuole continuare la ricerca
                 System.out.print("Vuoi fare un'altra ricerca? (s/n): ");
