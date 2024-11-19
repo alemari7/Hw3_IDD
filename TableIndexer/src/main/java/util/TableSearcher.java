@@ -102,10 +102,14 @@ public class TableSearcher {
                         continue;  // Ritorna al ciclo per una nuova ricerca
                 }
 
+                // Salva i docId come coda nell'ordine in cui sono restituiti
+                List<Integer> docIdQueue = new ArrayList<>();
+
                 // Stampa i risultati con il punteggio e il documento di origine
                 System.out.println("Trovati " + results.totalHits + " risultati.");
                 for (ScoreDoc scoreDoc : results.scoreDocs) {
                     int docId = scoreDoc.doc;
+                    docIdQueue.add(docId);  // Aggiungi il docId alla coda
 
                     // Usa storedFields() per ottenere il documento
                     Document doc = tableSearcher.searcher.storedFields().document(docId);
@@ -133,7 +137,7 @@ public class TableSearcher {
                 String[] relevantDocIndicesInput = scanner.nextLine().split(",");
                 List<Integer> relevantDocIndices = new ArrayList<>();
                 for (String idx : relevantDocIndicesInput) {
-                    relevantDocIndices.add(Integer.parseInt(idx.trim()));
+                    relevantDocIndices.add(docIdQueue.get(Integer.parseInt(idx.trim())));
                 }
 
                 // Valutazione delle metriche
