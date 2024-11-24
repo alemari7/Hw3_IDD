@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Searcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .result h4 {
+            margin: 0;
+        }
+        .result p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Search Tables</h1>
+
+    <!-- Form per inviare la query -->
+    <form id="searchForm">
+        <label for="query">Inserisci la tua query:</label><br>
+        <input type="text" id="query" name="query" required>
+        <button type="submit">Cerca</button>
+    </form>
+
+    <!-- Sezione per mostrare i risultati -->
+    <div id="results"></div>
+
+    <script>
+        // Gestisce l'invio del modulo
+        document.getElementById('searchForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+
+            fetch('http://localhost:8000/search?query=test&field=caption')
+                .then(response => response.json()) // Usa .text() per vedere la risposta grezza
+                .then(responseText => {
+                    console.log(responseText); // Controlla cosa arriva esattamente
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                });
+
+        });
+
+
+        // Funzione per visualizzare i risultati
+        function displayResults(data) {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';  // Pulisce i risultati precedenti
+
+            if (data.length === 0) {
+                resultsContainer.innerHTML = '<p>Nessun risultato trovato.</p>';
+            } else {
+                data.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.classList.add('result');
+
+                    resultDiv.innerHTML = `
+                        <h4>Documento ID: ${result.id}</h4>
+                        <p><strong>Score:</strong> ${result.score}</p>
+                        <p><strong>Caption:</strong> ${result.caption}</p>
+                        <p><strong>Footnotes:</strong> ${result.footnotes}</p>
+                        <p><strong>References:</strong> ${result.references}</p>
+                        <p><strong>Source File:</strong> ${result.sourceFile}</p>
+                    `;
+                    resultsContainer.appendChild(resultDiv);
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
