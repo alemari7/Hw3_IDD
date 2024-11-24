@@ -3,83 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table Searcher</title>
+    <title>Ricerca</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+        .result-container {
+            margin-top: 20px;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
         }
-        .result {
+        .result-container h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .result-container p {
+            font-size: 14px;
+            color: #555;
+        }
+        .table-content {
             margin-top: 10px;
             padding: 10px;
             border: 1px solid #ddd;
             background-color: #f9f9f9;
+            white-space: pre-wrap;
         }
-        .result h4 {
-            margin: 0;
+        .search-form {
+            margin-bottom: 20px;
         }
-        .result p {
-            margin: 5px 0;
+        .search-form input, .search-form select {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        .search-form button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
+    <h1>Ricerca</h1>
 
-    <h1>Search Tables</h1>
+    <!-- Form per modificare query e field -->
+    <div class="search-form">
+        <label for="queryInput">Query:</label>
+        <input type="text" id="queryInput" placeholder="Inserisci la query" value="Conv-TasNet">
+        
+        <label for="fieldSelect">Field:</label>
+        <select id="fieldSelect">
+            <option value="all">All</option>
+            <option value="caption">Caption</option>
+            <option value="references">References</option>
+            <option value="footnotes">Footnotes</option>
+        </select>
+        
+        <button onclick="submitSearch()">Cerca</button>
+    </div>
 
-    <!-- Form per inviare la query -->
-    <form id="searchForm">
-        <label for="query">Inserisci la tua query:</label><br>
-        <input type="text" id="query" name="query" required>
-        <button type="submit">Cerca</button>
-    </form>
-
-    <!-- Sezione per mostrare i risultati -->
-    <div id="results"></div>
+    <div id="resultsContainer">
+        <!-- I risultati verranno inseriti qui -->
+    </div>
 
     <script>
-        // Gestisce l'invio del modulo
-        document.getElementById('searchForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const query = document.getElementById('query').value;
+        // Funzione per caricare i dati dal backend
+        async function loadResults(query, field) {
+            const url = `http://localhost:8000/search?query=${encodeURIComponent(query)}&field=${encodeURIComponent(field)}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-            fetch('http://localhost:8000/search?query=test&field=caption')
-                .then(response => response.json()) // Usa .text() per vedere la risposta grezza
-                .then(responseText => {
-                    console.log(responseText); // Controlla cosa arriva esattamente
-                })
-                .catch(error => {
-                    console.error('Errore:', error);
-                });
+                // Controlla se la risposta è vuota o ha errore
+                if (data.message) {
+                    alert(data.message);
+                    return;
+                }
 
-        });
+                // Ottieni il container dei risultati
+                const resultsContainer = document.getElementById('resultsContainer');
 
+                // Svuota i risultati precedenti
+                resultsContainer.innerHTML = '';
 
-        // Funzione per visualizzare i risultati
-        function displayResults(data) {
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = '';  // Pulisce i risultati precedenti
-
-            if (data.length === 0) {
-                resultsContainer.innerHTML = '<p>Nessun risultato trovato.</p>';
-            } else {
-                data.forEach(result => {
+                // Aggiungi i risultati come div separati
+                data.forEach(item => {
                     const resultDiv = document.createElement('div');
-                    resultDiv.classList.add('result');
+                    resultDiv.classList.add('result-container');
 
+                    // Crea il contenuto per ogni risultato
                     resultDiv.innerHTML = `
-                        <h4>Documento ID: ${result.id}</h4>
-                        <p><strong>Score:</strong> ${result.score}</p>
-                        <p><strong>Caption:</strong> ${result.caption}</p>
-                        <p><strong>Footnotes:</strong> ${result.footnotes}</p>
-                        <p><strong>References:</strong> ${result.references}</p>
-                        <p><strong>Source File:</strong> ${result.sourceFile}</p>
+                        <h2>DocId: ${item.DocId}</h2>
+                        <p><strong>Caption:</strong> ${item.caption || 'N/A'}</p>
+                        <p><strong>Footnotes:</strong> ${item.footnotes || 'N/A'}</p>
+                        <p><strong>References:</strong> ${item.references || 'N/A'}</p>
+                        <div class="table-content">
+                            <strong>Table Content:</strong><br>
+                            ${item.table ? item.table : 'N/A'}
+                        </div>
+                        <p><strong>Source File:</strong> ${item.source_file || 'N/A'}</p>
                     `;
+
+                    // Aggiungi il risultato al container principale
                     resultsContainer.appendChild(resultDiv);
                 });
+            } catch (error) {
+                console.error("Errore durante il recupero dei dati:", error);
+                alert("Si è verificato un errore durante il recupero dei risultati.");
             }
         }
-    </script>
 
+        // Funzione per gestire il submit del modulo di ricerca
+        function submitSearch() {
+            const query = document.getElementById('queryInput').value;
+            const field = document.getElementById('fieldSelect').value;
+            loadResults(query, field);
+        }
+
+        // Chiamata alla funzione di ricerca con valori di default
+        loadResults('Conv-TasNet', 'all');
+    </script>
 </body>
 </html>
