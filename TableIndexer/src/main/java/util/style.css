@@ -1,0 +1,46 @@
+.result-container {
+    margin-top: 20px;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.result-container h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.result-container p {
+    font-size: 14px;
+    color: #555;
+}
+
+.table-content {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    white-space: pre-wrap;
+}
+
+.search-form {
+    margin-bottom: 20px;
+}
+
+.search-form input,
+.search-form select {
+    padding: 8px;
+    margin-right: 10px;
+}
+
+.search-form button {
+    padding: 8px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.search-form button:hover {
+    background-color: #45a049;
+}
