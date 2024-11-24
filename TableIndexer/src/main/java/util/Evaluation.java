@@ -1,74 +1,59 @@
 package util;
 
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
 
 import java.util.List;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class Evaluation {
 
-    // Calcolo del Mean Reciprocal Rank (MRR)
-    public static double calculateMRR(ScoreDoc[] scoreDocs, List<Integer> relevantDocIndices) {
-        // Trova il documento con il punteggio più alto tra quelli restituiti
-        int highestScoringDocId = scoreDocs[0].doc;
-        double highestScore = scoreDocs[0].score;
+    // Funzione per calcolare MRR e NDCG
+    public static double[] calculateMetrics(Float[] scoreArray, Integer[] relevantDocsArray, Integer[] docListArray) {
+        double mrr = calculateMRR(scoreArray, relevantDocsArray, docListArray);
+        double ndcg = calculateNDCG(scoreArray, relevantDocsArray, docListArray);
+        return new double[]{mrr, ndcg};
+    }
 
-        // Scorri i risultati per trovare il documento con il punteggio più alto
-        for (int i = 1; i < scoreDocs.length; i++) {
-            if (scoreDocs[i].score > highestScore) {
-                highestScoringDocId = scoreDocs[i].doc;
-                highestScore = scoreDocs[i].score;
+    // Calcolo del Mean Reciprocal Rank (MRR)
+    public static double calculateMRR(Float[] scoreArray, Integer[] relevantDocsArray, Integer[] docListArray) {
+        for (int i = 0; i < docListArray.length; i++) {
+            int docId = docListArray[i];
+            if (Arrays.asList(relevantDocsArray).contains(docId)) {
+                return 1.0 / (i + 1); // MRR è l'inverso della posizione del primo documento rilevante
             }
         }
-
-        // Trova la posizione di quel documento più rilevante nella lista fornita dall'utente
-        int userPosition = relevantDocIndices.indexOf(highestScoringDocId);
-
-        // Calcola la MRR come l'inverso della posizione nella lista (1-based index)
-        if (userPosition != -1) {
-            return 1.0 / (userPosition + 1);  // Reciprocal Rank
-        }
-
-        return 0.0; // Nessun documento rilevante trovato
+        return 0.0; // Se nessun documento rilevante è trovato
     }
 
     // Calcolo del Normalized Discounted Cumulative Gain (NDCG)
-    public static double calculateNDCG(TopDocs topDocs, List<Integer> relevantDocIndices) {
+    public static double calculateNDCG(Float[] scoreArray, Integer[] relevantDocsArray, Integer[] docListArray) {
         double dcg = 0.0;
         double idcg = 0.0;
 
-        // Calcola il DCG (basato sui risultati restituiti)
-        for (int i = 0; i < topDocs.scoreDocs.length; i++) {
-            int docId = topDocs.scoreDocs[i].doc; // Ottieni l'ID del documento
-            int relevance = getRelevance(docId, relevantDocIndices); // Ottieni la rilevanza relativa
-            if (relevance > 0) {
-                dcg += relevance / (Math.log(i + 2) / Math.log(2)); // Calcolo DCG
+        // Calcolo il DCG
+        for (int i = 0; i < docListArray.length; i++) {
+            int docId = docListArray[i];
+            if (Arrays.asList(relevantDocsArray).contains(docId)) {
+                dcg += 1 / (Math.log(i + 2) / Math.log(2)); // Aggiungi il contributo al DCG
             }
         }
 
-        // Calcola l'IDCG (ordine ideale basato sulla lista dei rilevanti fornita)
-        for (int i = 0; i < relevantDocIndices.size(); i++) {
-            int relevance = relevantDocIndices.size() - i; // Rilevanza ideale decrescente
-            idcg += relevance / (Math.log(i + 2) / Math.log(2));
+        // Calcolo l'IDCG (ideal DCG)
+        for (int i = 0; i < relevantDocsArray.length; i++) {
+            idcg += 1 / (Math.log(i + 2) / Math.log(2)); // Aggiungi il contributo al IDCG
         }
 
-        return idcg > 0 ? dcg / idcg : 0.0;
+        return (idcg > 0) ? dcg / idcg : 0.0;
     }
 
-    // Ottieni la rilevanza relativa di un documento (in base alla lista fornita)
-    private static int getRelevance(int docId, List<Integer> relevantDocIndices) {
-        int position = relevantDocIndices.indexOf(docId);
-        if (position != -1) {
-            return relevantDocIndices.size() - position; // Rilevanza decrescente
-        }
-        return 0; // Non rilevante
-    }
-
-    // Metodo di valutazione
-    public static double[] evaluateSearchResults(TopDocs topDocs, List<Integer> relevantDocIndices) {
-        double mrr = calculateMRR(topDocs.scoreDocs, relevantDocIndices);
-        double ndcg = calculateNDCG(topDocs, relevantDocIndices);
-
-        return new double[]{mrr, ndcg};
-    }
 }

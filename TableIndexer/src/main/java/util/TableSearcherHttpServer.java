@@ -20,6 +20,12 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -78,6 +84,7 @@ public class TableSearcherHttpServer {
 
             HttpServer server = HttpServer.create(new java.net.InetSocketAddress(8000), 0);
             server.createContext("/search", new SearchHandler(tableSearcher));
+            server.createContext("/metrics", new MetricsHandler(tableSearcher));
             server.setExecutor(null); // Default executor
             server.start();
 
@@ -86,6 +93,121 @@ public class TableSearcherHttpServer {
             e.printStackTrace();
         }
     }
+
+    // Nuovo handler per l'endpoint /metrics
+    static class MetricsHandler implements HttpHandler {
+        private TableSearcherHttpServer tableSearcher;
+
+        public MetricsHandler(TableSearcherHttpServer tableSearcher) {
+            this.tableSearcher = tableSearcher;
+        }
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String response = "";
+
+            // Aggiungi intestazioni CORS per le risposte
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+
+            // Se la richiesta è OPTIONS (pre-flight), rispondi senza fare nulla
+            if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(200, -1); // Risposta vuota per OPTIONS
+                return;
+            }
+
+            if ("GET".equals(exchange.getRequestMethod())) {
+                try {
+                    // Estrai i parametri dalla query string
+                    Map<String, String> queryParams = queryToMap(exchange.getRequestURI().getQuery());
+                    String relevantDocs = queryParams.get("relevantDocs");
+                    String score = queryParams.get("score");
+                    String countS = queryParams.get("count");
+                    String docListS = queryParams.get("docList");
+
+                    // Converte i parametri in tipi appropriati
+                    int count = Integer.parseInt(countS);
+
+                    // Converte la stringa di 'relevantDocs' in un array di Integer
+                    String[] relevantDocsArrayStr = relevantDocs.split(",");
+                    Integer[] relevantDocsArray = new Integer[relevantDocsArrayStr.length];
+                    for (int i = 0; i < relevantDocsArrayStr.length; i++) {
+                        relevantDocsArray[i] = Integer.parseInt(relevantDocsArrayStr[i]);
+                    }
+
+                    // Converte la stringa di 'score' in un array di Float
+                    String[] scoreArrayStr = score.split(",");
+                    Float[] scoreArray = new Float[scoreArrayStr.length];
+                    for (int i = 0; i < scoreArrayStr.length; i++) {
+                        scoreArray[i] = Float.parseFloat(scoreArrayStr[i]);
+                    }
+
+                    // Converte la stringa di 'docList' in un array di Integer
+                    String[] docListArrayStr = docListS.split(",");
+                    Integer[] docListArray = new Integer[docListArrayStr.length];
+                    for (int i = 0; i < docListArrayStr.length; i++) {
+                        docListArray[i] = Integer.parseInt(docListArrayStr[i]);
+                    }
+
+                    // Calcola i risultati della valutazione
+                    double[] evaluationResults = Evaluation.calculateMetrics(scoreArray, relevantDocsArray, docListArray);
+                    double mrr = evaluationResults[0];
+                    double ndcg = evaluationResults[1];
+
+                    // Calcola la media delle metriche
+                    double mean_mrr = 0.0;
+                    double mean_ndcg = 0.0;
+
+                    if (count == 1) {
+                        mean_mrr = mrr;
+                        mean_ndcg = ndcg;
+                    } else {
+                        mean_mrr = (mean_mrr * (count - 1) + mrr) / count;
+                        mean_ndcg = (mean_ndcg * (count - 1) + ndcg) / count;
+                    }
+
+                    // Crea la risposta in formato JSON
+                    JSONObject metrics = new JSONObject();
+                    metrics.put("mrr", mrr);
+                    metrics.put("ndcg", ndcg);
+                    metrics.put("mean_mrr", mean_mrr);
+                    metrics.put("mean_ndcg", mean_ndcg);
+
+                    response = metrics.toString();
+
+                } catch (Exception e) {
+                    // Gestione errori
+                    JSONObject errorResponse = new JSONObject();
+                    errorResponse.put("error", "An error occurred while calculating metrics");
+                    response = errorResponse.toString();
+                    e.printStackTrace();
+                }
+            }
+
+            // Invio la risposta
+            exchange.sendResponseHeaders(200, response.getBytes().length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+        // Funzione per convertire la query string in una mappa di parametri
+        private Map<String, String> queryToMap(String query) {
+            Map<String, String> queryPairs = new HashMap<>();
+            if (query != null) {
+                String[] pairs = query.split("&");
+                for (String pair : pairs) {
+                    String[] keyValue = pair.split("=");
+                    if (keyValue.length == 2) {
+                        queryPairs.put(keyValue[0], keyValue[1]);
+                    }
+                }
+            }
+            return queryPairs;
+        }
+    }
+
+
 
     static class SearchHandler implements HttpHandler {
         private TableSearcherHttpServer tableSearcher;
@@ -133,6 +255,7 @@ public class TableSearcherHttpServer {
                     if (results != null) {
                         for (ScoreDoc scoreDoc : results.scoreDocs) {
                             int docId = scoreDoc.doc;
+                            float score = scoreDoc.score;  // Ottieni lo score del documento
                             Document doc = tableSearcher.searcher.storedFields().document(docId);
                             String caption = doc.get("caption");
                             String footnotes = doc.get("footnotes");
@@ -148,7 +271,8 @@ public class TableSearcherHttpServer {
                             resultObject.put("references", references != null ? references : "N/A");
                             resultObject.put("table", table != null ? table : "N/A");
                             resultObject.put("source_file", sourceFile != null ? sourceFile : "N/A");
-            
+                            resultObject.put("score", score);  // Aggiungi lo score del documento
+
                             resultArray.put(resultObject);
                         }
                     } else {
