@@ -1,18 +1,9 @@
 package util;
 
-import org.apache.lucene.search.ScoreDoc;
 
-import java.util.List;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Paths;
-import java.util.Map;
-import java.util.HashMap;
+
 import java.util.Arrays;
-import java.util.List;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+
 
 
 public class Evaluation {

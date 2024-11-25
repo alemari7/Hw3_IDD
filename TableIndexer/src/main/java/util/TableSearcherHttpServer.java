@@ -20,11 +20,7 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+
 
 
 import org.json.JSONArray;
@@ -97,6 +93,8 @@ public class TableSearcherHttpServer {
     // Nuovo handler per l'endpoint /metrics
     static class MetricsHandler implements HttpHandler {
         private TableSearcherHttpServer tableSearcher;
+        private double mean_mrr = 0.0;
+        private double mean_ndcg = 0.0;
 
         public MetricsHandler(TableSearcherHttpServer tableSearcher) {
             this.tableSearcher = tableSearcher;
@@ -156,8 +154,6 @@ public class TableSearcherHttpServer {
                     double ndcg = evaluationResults[1];
 
                     // Calcola la media delle metriche
-                    double mean_mrr = 0.0;
-                    double mean_ndcg = 0.0;
 
                     if (count == 1) {
                         mean_mrr = mrr;

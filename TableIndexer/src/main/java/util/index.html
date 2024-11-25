@@ -9,19 +9,29 @@
 <body>
     <h1>Ricerca</h1>
 
-    <!-- Form per modificare query e field -->
+    <!-- Selezione modalità di ricerca -->
+    <div class="search-mode">
+        <label for="searchType">Tipo di Ricerca:</label>
+        <select id="searchType" onchange="toggleFieldSelection()">
+            <option value="single">Query Singola</option>
+            <option value="combined">Query Combinata</option>
+        </select>
+    </div>
+
+    <!-- Form per modificare query e campi -->
     <div class="search-form">
         <label for="queryInput">Query:</label>
         <input type="text" id="queryInput" placeholder="Inserisci la query" value="Conv-TasNet">
-        
-        <label for="fieldSelect">Field:</label>
-        <select id="fieldSelect">
-            <option value="all">All</option>
-            <option value="caption">Caption</option>
-            <option value="references">References</option>
-            <option value="footnotes">Footnotes</option>
-        </select>
-        
+
+        <!-- Campi disponibili per tutte le modalità -->
+        <div id="fieldSelection">
+            <p>Seleziona il/i campo/i per la ricerca:</p>
+            <label><input type="checkbox" name="field" value="caption" class="field-checkbox"> Caption</label><br>
+            <label><input type="checkbox" name="field" value="references" class="field-checkbox"> References</label><br>
+            <label><input type="checkbox" name="field" value="footnotes" class="field-checkbox"> Footnotes</label><br>
+            <label><input type="checkbox" name="field" value="table" class="field-checkbox"> Table Content</label>
+        </div>
+
         <button onclick="submitSearch()">Cerca</button>
     </div>
 
