@@ -5,7 +5,7 @@ import org.apache.lucene.search.TopDocs;
 
 import java.util.List;
 
-public class Eval {
+public class EvaluationConsole {
 
     // Calcolo del Mean Reciprocal Rank (MRR)
     public static double calculateMRR(ScoreDoc[] scoreDocs, List<Integer> relevantDocIndices) {

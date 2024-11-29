@@ -7,6 +7,7 @@ async function loadResults(query, fields) {
     docList = [];
     scoreList = [];
 
+    // Costruisci l'URL per la richiesta
     const fieldsParam = Array.isArray(fields) ? fields.join(",") : fields;
     const url = `http://localhost:8000/search?query=${encodeURIComponent(query)}&fields=${encodeURIComponent(fieldsParam)}`;
     

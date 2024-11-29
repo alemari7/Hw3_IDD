@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class TableSearch {
+public class TableSearcherConsole {
     private IndexSearcher searcher;
     private QueryParser captionParser;
     private QueryParser referencesParser;
@@ -31,10 +31,12 @@ public class TableSearch {
         return Jsoup.parse(html).text();
     }
 
-    public TableSearch(String indexDirectoryPath) throws Exception {
+    // Costruttore
+    public TableSearcherConsole(String indexDirectoryPath) throws Exception {
         DirectoryReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirectoryPath)));
         searcher = new IndexSearcher(reader);
 
+        // Inizializza i QueryParser per i campi desiderati
         captionParser = new QueryParser("caption", new StandardAnalyzer());
         referencesParser = new QueryParser("references", new StandardAnalyzer());
         footnotesParser = new QueryParser("footnotes", new StandardAnalyzer());
@@ -44,6 +46,7 @@ public class TableSearch {
         multiFieldQueryParser = new MultiFieldQueryParser(fields, new StandardAnalyzer());
     }
 
+    // Funzione per la ricerca su un campo specifico
     public TopDocs searchCaption(String queryStr) throws Exception {
         Query query = captionParser.parse(queryStr);
         return searcher.search(query, 10);
@@ -68,9 +71,10 @@ public class TableSearch {
         Scanner scanner = new Scanner(System.in);
 
         try {
-            String indexDirectory = "indexDir";
-            TableSearch tableSearcher = new TableSearch(indexDirectory);
+            String indexDirectory = "indexDir";     // Directory dell'indice
+            TableSearcherConsole tableSearcher = new TableSearcherConsole(indexDirectory);
 
+            // Variabili per la media delle metriche
             double mean_mmr = 0.0;
             double mean_ndcg = 0.0;
             int count = 0;
@@ -89,7 +93,7 @@ public class TableSearch {
                 System.out.print("Inserisci la query di ricerca: ");
                 String query = scanner.nextLine();
 
-                long startTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();        // Calcola il tempo di inizio
                 TopDocs results = null;
 
                 switch (choice) {
@@ -110,9 +114,11 @@ public class TableSearch {
                         continue;
                 }
 
+                // Calcola il tempo di risposta
                 long endTime = System.currentTimeMillis();
                 long responseTime = endTime - startTime;
 
+                // Coda per mantenere gli ID dei documenti
                 List<Integer> docIdQueue = new ArrayList<>();
 
                 System.out.println("Trovati " + results.totalHits + " risultati. Tempo di risposta: " + responseTime + " ms.\n");
@@ -120,8 +126,10 @@ public class TableSearch {
                     int docId = scoreDoc.doc;
                     docIdQueue.add(docId);
 
+                    // Recupera il documento dallo store
                     Document doc = tableSearcher.searcher.storedFields().document(docId);
 
+                    // Recupera i campi necessari
                     float score = scoreDoc.score;
                     String caption = doc.get("caption");
                     String footnotes = doc.get("footnotes");
@@ -129,7 +137,7 @@ public class TableSearch {
                     String table = doc.get("table");
                     String sourceFile = doc.get("source_file");
 
-                    String parsedTable = parseHtmlToPlainText(table);
+                    String parsedTable = parseHtmlToPlainText(table);       // Parsing dell'HTML
 
                     System.out.println("Documento ID: " + docId + " | Score: " + score);
                     System.out.println("Caption: " + (caption != null ? caption : "N/A"));
@@ -139,20 +147,24 @@ public class TableSearch {
                     System.out.println("Fonte: " + sourceFile + "\n");
                 }
 
+                // Valutazione dei risultati
                 System.out.print("Inserisci gli indici dei documenti rilevanti (separati da virgola): ");
                 String[] relevantDocIndicesInput = scanner.nextLine().split(",");
                 List<Integer> relevantDocIndices = new ArrayList<>();
+                // Aggiungi gli indici dei documenti rilevanti alla lista
                 for (String idx : relevantDocIndicesInput) {
                     relevantDocIndices.add(docIdQueue.get(Integer.parseInt(idx.trim())));
                 }
 
-                double[] evaluationResults = Eval.evaluateSearchResults(results, relevantDocIndices);
+                // Calcola MRR e NDCG
+                double[] evaluationResults = EvaluationConsole.evaluateSearchResults(results, relevantDocIndices);
                 double mrr = evaluationResults[0];
                 double ndcg = evaluationResults[1];
 
                 System.out.println("MRR: " + mrr);
                 System.out.println("NDCG: " + ndcg);
 
+                // Calcola la media delle metriche
                 if (count == 0) {
                     mean_mmr = mrr;
                     mean_ndcg = ndcg;

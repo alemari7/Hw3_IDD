@@ -44,6 +44,7 @@ public class TableSearcherHttpServer {
         DirectoryReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirectoryPath)));
         searcher = new IndexSearcher(reader);
 
+        // Inizializza i QueryParser per i campi desiderati
         captionParser = new QueryParser("caption", new StandardAnalyzer());
         referencesParser = new QueryParser("references", new StandardAnalyzer());
         footnotesParser = new QueryParser("footnotes", new StandardAnalyzer());
@@ -78,9 +79,10 @@ public class TableSearcherHttpServer {
             String indexDirectory = "indexDir";  // Percorso dell'indice Lucene
             TableSearcherHttpServer tableSearcher = new TableSearcherHttpServer(indexDirectory);
 
+            // Crea un server HTTP per gestire le richieste di ricerca
             HttpServer server = HttpServer.create(new java.net.InetSocketAddress(8000), 0);
-            server.createContext("/search", new SearchHandler(tableSearcher));
-            server.createContext("/metrics", new MetricsHandler(tableSearcher));
+            server.createContext("/search", new SearchHandler(tableSearcher));      // Gestisce le richieste di ricerca
+            server.createContext("/metrics", new MetricsHandler(tableSearcher));    // Gestisce le richieste di valutazione
             server.setExecutor(null); // Default executor
             server.start();
 
@@ -93,6 +95,8 @@ public class TableSearcherHttpServer {
     // Nuovo handler per l'endpoint /metrics
     static class MetricsHandler implements HttpHandler {
         private TableSearcherHttpServer tableSearcher;
+
+        // Variabili per calcolare la media delle metriche
         private double mean_mrr = 0.0;
         private double mean_ndcg = 0.0;
 
@@ -115,6 +119,7 @@ public class TableSearcherHttpServer {
                 return;
             }
 
+            // Se la richiesta è GET, calcola le metriche
             if ("GET".equals(exchange.getRequestMethod())) {
                 try {
                     // Estrai i parametri dalla query string
@@ -149,12 +154,11 @@ public class TableSearcherHttpServer {
                     }
 
                     // Calcola i risultati della valutazione
-                    double[] evaluationResults = Evaluation.calculateMetrics(scoreArray, relevantDocsArray, docListArray);
+                    double[] evaluationResults = Evaluation.calculateMetrics(relevantDocsArray, docListArray);
                     double mrr = evaluationResults[0];
                     double ndcg = evaluationResults[1];
 
                     // Calcola la media delle metriche
-
                     if (count == 1) {
                         mean_mrr = mrr;
                         mean_ndcg = ndcg;
@@ -204,7 +208,7 @@ public class TableSearcherHttpServer {
     }
 
 
-
+    // Nuovo handler per l'endpoint /search
     static class SearchHandler implements HttpHandler {
         private TableSearcherHttpServer tableSearcher;
 
@@ -227,12 +231,14 @@ public class TableSearcherHttpServer {
                 return;
             }
 
+            // Se la richiesta è GET, esegui la ricerca
             if ("GET".equals(exchange.getRequestMethod())) {
                 // Estrai i parametri dalla query string
                 Map<String, String> queryParams = queryToMap(exchange.getRequestURI().getQuery());
                 String query = queryParams.get("query");
                 String field = queryParams.get("field");
             
+                // Esegui la ricerca in base al campo specificato
                 try {
                     TopDocs results = null;
                     if (field == null || field.equals("caption")) {
@@ -249,6 +255,7 @@ public class TableSearcherHttpServer {
                     JSONArray resultArray = new JSONArray();
             
                     if (results != null) {
+                        // Scorrere i risultati e creare un oggetto JSON per ciascun documento
                         for (ScoreDoc scoreDoc : results.scoreDocs) {
                             int docId = scoreDoc.doc;
                             float score = scoreDoc.score;  // Ottieni lo score del documento
@@ -272,6 +279,7 @@ public class TableSearcherHttpServer {
                             resultArray.put(resultObject);
                         }
                     } else {
+                        // Nessun risultato trovato
                         JSONObject noResults = new JSONObject();
                         noResults.put("message", "No results found");
                         resultArray.put(noResults);

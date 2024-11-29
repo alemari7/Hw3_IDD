@@ -9,14 +9,14 @@ import java.util.Arrays;
 public class Evaluation {
 
     // Funzione per calcolare MRR e NDCG
-    public static double[] calculateMetrics(Float[] scoreArray, Integer[] relevantDocsArray, Integer[] docListArray) {
-        double mrr = calculateMRR(scoreArray, relevantDocsArray, docListArray);
-        double ndcg = calculateNDCG(scoreArray, relevantDocsArray, docListArray);
+    public static double[] calculateMetrics(Integer[] relevantDocsArray, Integer[] docListArray) {
+        double mrr = calculateMRR(relevantDocsArray, docListArray);
+        double ndcg = calculateNDCG(relevantDocsArray, docListArray);
         return new double[]{mrr, ndcg};
     }
 
     // Calcolo del Mean Reciprocal Rank (MRR)
-    public static double calculateMRR(Float[] scoreArray, Integer[] relevantDocsArray, Integer[] docListArray) {
+    public static double calculateMRR(Integer[] relevantDocsArray, Integer[] docListArray) {
         for (int i = 0; i < docListArray.length; i++) {
             int docId = docListArray[i];
             if (Arrays.asList(relevantDocsArray).contains(docId)) {
@@ -27,7 +27,7 @@ public class Evaluation {
     }
 
     // Calcolo del Normalized Discounted Cumulative Gain (NDCG)
-    public static double calculateNDCG(Float[] scoreArray, Integer[] relevantDocsArray, Integer[] docListArray) {
+    public static double calculateNDCG(Integer[] relevantDocsArray, Integer[] docListArray) {
         double dcg = 0.0;
         double idcg = 0.0;
 
