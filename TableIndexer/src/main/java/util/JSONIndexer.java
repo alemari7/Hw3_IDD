@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 public class JSONIndexer {
 
     private IndexWriter writer;
+    private int indexedFilesCount = 0; // Variabile per tenere traccia dei file indicizzati
 
     public JSONIndexer(String indexPath) throws IOException {
         Directory dir = FSDirectory.open(Paths.get(indexPath)); // Crea un oggetto Directory per l'indice
@@ -68,6 +69,12 @@ public class JSONIndexer {
                 jsonContent.append((char) i);
             }
 
+            // Verifica se il contenuto del file JSON è vuoto
+            if (jsonContent.length() == 0) {
+                System.out.println("Skipping empty file: " + jsonFile.getName());
+                return;
+            }
+
             // Parsing del contenuto JSON
             JSONObject jsonObject = null;
             try {
@@ -76,56 +83,59 @@ public class JSONIndexer {
                 System.out.println("Skipping invalid JSON file: " + jsonFile.getName());
                 return; // Salta il file se non è JSON valido
             }
-            
-            // Itera sulle chiavi del JSON principale
-            for (String key : jsonObject.keySet()) {
-                Object value = jsonObject.get(key); // Ottieni il valore associato alla chiave
-                
-                Document doc = new Document();
-                
-                // Estrarre e indicizzare la "table"
-                if (value instanceof JSONObject) {
-                    JSONObject tableInfo = (JSONObject) value;
 
-                    // Verifica che "table" sia un oggetto JSON
-                    if (tableInfo.has("table") && tableInfo.get("table") instanceof JSONObject) {
-                        JSONObject table = tableInfo.getJSONObject("table");
-                        String tableContent = table.toString(); // Oppure estrai altri dati dalla tabella
-                        doc.add(new TextField("table", tableContent, Field.Store.YES));
-                    } else {
-                        // Se "table" non è un oggetto JSON, gestisci diversamente (ad esempio, indicizzalo come una stringa)
-                        String tableContent = tableInfo.optString("table", "No table content available");
-                        doc.add(new TextField("table", tableContent, Field.Store.YES));
-                    }
-                }
-
-                // Estrarre e indicizzare "caption"
-                if (value instanceof JSONObject && ((JSONObject) value).has("caption")) {
-                    JSONObject tableInfo = (JSONObject) value;
-                    String caption = tableInfo.optString("caption", "No caption available");
-                    doc.add(new TextField("caption", caption, Field.Store.YES));
-                }
-
-                // Estrarre e indicizzare "footnotes"
-                if (value instanceof JSONObject && ((JSONObject) value).has("footnotes")) {
-                    JSONObject tableInfo = (JSONObject) value;
-                    String footnotes = tableInfo.optString("footnotes", "No footnotes available");
-                    doc.add(new TextField("footnotes", footnotes, Field.Store.YES));
-                }
-
-                // Estrarre e indicizzare "reference"
-                if (value instanceof JSONObject && ((JSONObject) value).has("references")) {
-                    JSONObject tableInfo = (JSONObject) value;
-                    String reference = tableInfo.optString("references", "No reference available");
-                    doc.add(new TextField("references", reference, Field.Store.YES));
-                }
-
-                // Aggiungi anche il nome del file per tracciare la provenienza dei dati
-                doc.add(new StringField("source_file", jsonFile.getName(), Field.Store.YES));
-
-                // Aggiungi il documento all'indice
-                writer.addDocument(doc);
+            // Verifica che il JSON sia un oggetto e non un array o altro tipo
+            if (!(jsonObject instanceof JSONObject)) {
+                System.out.println("Skipping non-object JSON file: " + jsonFile.getName());
+                return;
             }
+
+            Document doc = new Document();
+            StringBuilder tableContent = new StringBuilder();
+            StringBuilder captionContent = new StringBuilder();
+            StringBuilder footnotesContent = new StringBuilder();
+            StringBuilder referencesContent = new StringBuilder();
+
+            // Itera su tutte le chiavi e concatena i valori
+            for (String key : jsonObject.keySet()) {
+                Object value = jsonObject.get(key);
+                
+                // Estrarre e concatenare la "table"
+                if (key.equals("table") && value instanceof JSONObject) {
+                    JSONObject tableInfo = (JSONObject) value;
+                    tableContent.append(tableInfo.toString());
+                }
+
+                // Estrarre e concatenare "caption"
+                if (key.equals("caption") && value instanceof String) {
+                    captionContent.append((String) value);
+                }
+
+                // Estrarre e concatenare "footnotes"
+                if (key.equals("footnotes") && value instanceof String) {
+                    footnotesContent.append((String) value);
+                }
+
+                // Estrarre e concatenare "references"
+                if (key.equals("references") && value instanceof String) {
+                    referencesContent.append((String) value);
+                }
+            }
+
+            // Aggiungi tutti i dati concatenati nel documento
+            doc.add(new TextField("table", tableContent.toString(), Field.Store.YES));
+            doc.add(new TextField("caption", captionContent.toString(), Field.Store.YES));
+            doc.add(new TextField("footnotes", footnotesContent.toString(), Field.Store.YES));
+            doc.add(new TextField("references", referencesContent.toString(), Field.Store.YES));
+            
+            // Aggiungi anche il nome del file per tracciare la provenienza dei dati
+            doc.add(new StringField("source_file", jsonFile.getName(), Field.Store.YES));
+
+            // Aggiungi il documento all'indice
+            writer.addDocument(doc);
+
+            // Incrementa il contatore dei file indicizzati
+            indexedFilesCount++;
         } catch (Exception e) {
             System.out.println("Error indexing file: " + jsonFile.getName());
             e.printStackTrace();
@@ -135,6 +145,8 @@ public class JSONIndexer {
     public void close() throws IOException {
         writer.close();
         System.out.println("IndexWriter closed.");
+        // Stampa il numero totale di file indicizzati
+        System.out.println("Total indexed files: " + indexedFilesCount);
     }
 
     public static void main(String[] args) {
