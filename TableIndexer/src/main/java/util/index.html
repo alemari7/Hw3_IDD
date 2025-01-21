@@ -9,15 +9,6 @@
 <body>
     <h1>Ricerca</h1>
 
-    <!-- Selezione modalità di ricerca -->
-    <div class="search-mode">
-        <label for="searchType">Tipo di Ricerca:</label>
-        <select id="searchType" onchange="toggleFieldSelection()">
-            <option value="single">Query Singola</option>
-            <option value="combined">Query Combinata</option>
-        </select>
-    </div>
-
     <!-- Form per modificare query e campi -->
     <div class="search-form">
         <label for="queryInput">Query:</label>
@@ -29,7 +20,6 @@
             <label><input type="checkbox" name="field" value="caption" class="field-checkbox"> Caption</label><br>
             <label><input type="checkbox" name="field" value="references" class="field-checkbox"> References</label><br>
             <label><input type="checkbox" name="field" value="footnotes" class="field-checkbox"> Footnotes</label><br>
-            <label><input type="checkbox" name="field" value="table" class="field-checkbox"> Table Content</label>
         </div>
 
         <button onclick="submitSearch()">Cerca</button>

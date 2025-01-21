@@ -101,7 +101,6 @@ async function submitMetrics() {
 // Funzione per gestire il submit del modulo di ricerca
 function submitSearch() {
     const query = document.getElementById("queryInput").value;
-    const searchType = document.getElementById("searchType").value;
 
     if (!query.trim()) {
         alert("La query non può essere vuota.");

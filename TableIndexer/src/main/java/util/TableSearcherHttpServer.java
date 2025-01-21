@@ -32,6 +32,11 @@ public class TableSearcherHttpServer {
     private QueryParser referencesParser;
     private QueryParser footnotesParser;
     private MultiFieldQueryParser multiFieldQueryParser;
+    private MultiFieldQueryParser multiFieldQueryParser_Caption_References;
+    private MultiFieldQueryParser multiFieldQueryParser_Caption_Footnotes;
+    private MultiFieldQueryParser multiFieldQueryParser_References_Footnotes;
+
+
 
     public static String parseHtmlToPlainText(String html) {
         if (html == null || html.isEmpty()) {
@@ -49,9 +54,21 @@ public class TableSearcherHttpServer {
         referencesParser = new QueryParser("references", new StandardAnalyzer());
         footnotesParser = new QueryParser("footnotes", new StandardAnalyzer());
 
-        // Inizializza il MultiFieldQueryParser per i campi desiderati
-        String[] fields = {"caption", "references", "footnotes"};
-        multiFieldQueryParser = new MultiFieldQueryParser(fields, new StandardAnalyzer());
+        // Inizializza il MultiFieldQueryParser per i tutti i campi
+        String[] fields_all = {"caption", "references", "footnotes"};
+        multiFieldQueryParser = new MultiFieldQueryParser(fields_all, new StandardAnalyzer());
+
+        // Inizializza il MultiFieldQueryParser per i campi caption e references
+        String[] fields_cr = {"caption", "references"};
+        multiFieldQueryParser_Caption_References = new MultiFieldQueryParser(fields_cr, new StandardAnalyzer());
+
+         // Inizializza il MultiFieldQueryParser per i campi caption e footnotes
+        String[] fields_cf = {"caption", "footnotes"};
+        multiFieldQueryParser_Caption_Footnotes = new MultiFieldQueryParser(fields_cf, new StandardAnalyzer());
+
+         // Inizializza il MultiFieldQueryParser per i campi caption e footnotes
+         String[] fields_rf = {"references", "footnotes"};
+         multiFieldQueryParser_References_Footnotes = new MultiFieldQueryParser(fields_rf, new StandardAnalyzer());        
     }
 
     public TopDocs searchCaption(String queryStr) throws Exception {
@@ -71,6 +88,21 @@ public class TableSearcherHttpServer {
 
     public TopDocs searchMultipleFields(String queryStr) throws Exception {
         Query query = multiFieldQueryParser.parse(queryStr);
+        return searcher.search(query, 10);
+    }
+
+    public TopDocs searchMultipleFields_Caption_Footnotes(String queryStr) throws Exception {
+        Query query = multiFieldQueryParser_Caption_Footnotes.parse(queryStr);
+        return searcher.search(query, 10);
+    }    
+
+    public TopDocs searchMultipleFields_Caption_References(String queryStr) throws Exception {
+        Query query = multiFieldQueryParser_Caption_References.parse(queryStr);
+        return searcher.search(query, 10);
+    }
+
+    public TopDocs searchMultipleFields_References_Footnotes(String queryStr) throws Exception {
+        Query query = multiFieldQueryParser_References_Footnotes.parse(queryStr);
         return searcher.search(query, 10);
     }
 
@@ -236,7 +268,7 @@ public class TableSearcherHttpServer {
                 // Estrai i parametri dalla query string
                 Map<String, String> queryParams = queryToMap(exchange.getRequestURI().getQuery());
                 String query = queryParams.get("query");
-                String field = queryParams.get("field");
+                String field = queryParams.get("fields");
             
                 // Esegui la ricerca in base al campo specificato
                 try {
@@ -247,8 +279,14 @@ public class TableSearcherHttpServer {
                         results = tableSearcher.searchReferences(query);
                     } else if (field.equals("footnotes")) {
                         results = tableSearcher.searchFootnotes(query);
-                    } else if (field.equals("all")) {
+                    } else if (field.equals("caption,references,footnotes")) {
                         results = tableSearcher.searchMultipleFields(query);
+                    } else if (field.equals("caption,references")) {
+                        results = tableSearcher.searchMultipleFields_Caption_References(query);
+                    } else if (field.equals("caption,footnotes")) {
+                        results = tableSearcher.searchMultipleFields_Caption_Footnotes(query);
+                    } else if (field.equals("references,footnotes")) {
+                        results = tableSearcher.searchMultipleFields_References_Footnotes(query);
                     }
 
                     // Creazione risposta in formato JSON
