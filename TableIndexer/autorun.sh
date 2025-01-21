@@ -2,12 +2,15 @@
 
 # Funzione per mostrare l'uso dello script
 usage() {
-    echo "Usage: $0 -type [console|server]"
+    echo "Usage: $0 -type [console|server] [-i]"
+    echo "  -type: Specify 'console' or 'server' mode."
+    echo "  -i:    Run indexing before executing the type-specific command."
     exit 1
 }
 
 # Inizializza le variabili
 TYPE=""
+RUN_INDEXING=false
 
 # Parse degli argomenti
 while [[ "$#" -gt 0 ]]; do
@@ -15,6 +18,10 @@ while [[ "$#" -gt 0 ]]; do
         -type)
             TYPE="$2"
             shift 2
+            ;;
+        -i)
+            RUN_INDEXING=true
+            shift
             ;;
         *)
             echo "Unknown option: $1"
@@ -29,23 +36,21 @@ if [[ -z "$TYPE" ]]; then
     usage
 fi
 
-# Effettua il building del progetto
+# Esegui sempre il comando mvn clean install
 mvn clean install
 
-# Esegui la pulizia dei file JSON
-mvn exec:java -Dexec.mainClass="util.JSONCleaner"
-
-# Esegui l'indicizzazione dei file JSON
-mvn exec:java -Dexec.mainClass="util.JSONIndexer"
+# Esegui l'indicizzazione solo se richiesto con -i
+if $RUN_INDEXING; then
+    mvn exec:java -Dexec.mainClass="util.JSONCleaner"
+    mvn exec:java -Dexec.mainClass="util.JSONIndexer"
+fi
 
 # Esegui il comando corrispondente al tipo
 case "$TYPE" in
     server)
-        # Esegui il server HTTP
         mvn exec:java -Dexec.mainClass="util.TableSearcherHttpServer"
         ;;
     console)
-        # Esegui la console di ricerca
         mvn exec:java -Dexec.mainClass="util.TableSearcherConsole"
         ;;
     *)
