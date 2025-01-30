@@ -3,4 +3,4 @@ target
 all_tables
 indexDir
 META_INF
-cleaned_tables
+json_cleaned

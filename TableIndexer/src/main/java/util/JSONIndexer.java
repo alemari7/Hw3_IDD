@@ -140,7 +140,7 @@ public class JSONIndexer {
     public static void main(String[] args) {
         try {
             String indexPath = "indexDir"; // Specifica il percorso per l'indice
-            String jsonDirPath = "cleaned_tables"; // Specifica il percorso della directory con i file JSON
+            String jsonDirPath = "json_cleaned"; // Specifica il percorso della directory con i file JSON
             
             JSONIndexer indexer = new JSONIndexer(indexPath);
             indexer.indexJsonFiles(jsonDirPath);
