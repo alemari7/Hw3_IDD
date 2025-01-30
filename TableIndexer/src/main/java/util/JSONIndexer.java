@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 public class JSONIndexer {
 
     private IndexWriter writer;
+    private int indexedFileCount = 0; // Conta il numero di file indicizzati
 
     public JSONIndexer(String indexPath) throws IOException {
         Directory dir = FSDirectory.open(Paths.get(indexPath)); // Crea un oggetto Directory per l'indice
@@ -54,6 +55,7 @@ public class JSONIndexer {
             if (jsonFile.canRead()) {
                 System.out.println("Indexing file: " + jsonFile.getName());
                 indexDocument(jsonFile);
+                indexedFileCount++; // Incrementa il contatore dei file indicizzati
             } else {
                 System.out.println("Cannot read file: " + jsonFile.getName());
             }
@@ -93,7 +95,6 @@ public class JSONIndexer {
                         String tableContent = table.toString(); // Oppure estrai altri dati dalla tabella
                         doc.add(new TextField("table", tableContent, Field.Store.YES));
                     } else {
-                        // Se "table" non è un oggetto JSON, gestisci diversamente (ad esempio, indicizzalo come una stringa)
                         String tableContent = tableInfo.optString("table", "No table content available");
                         doc.add(new TextField("table", tableContent, Field.Store.YES));
                     }
@@ -135,6 +136,7 @@ public class JSONIndexer {
     public void close() throws IOException {
         writer.close();
         System.out.println("IndexWriter closed.");
+        System.out.println("Total files indexed: " + indexedFileCount); // Stampa il numero totale di file indicizzati
     }
 
     public static void main(String[] args) {
